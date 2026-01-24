@@ -1,0 +1,37 @@
+﻿@using ExamSystem.Models
+@model List<ExamQuestionViewModel>
+
+<h2>Take Exam</h2>
+
+<form asp-action="SubmitExam" method="post">
+    <input type="hidden" name="studentId" value="1" />
+    <input type="hidden" name="examId" value="@Model.First().ExamId" />
+
+    @foreach (var q in Model)
+    {
+        <div>
+            <p><b>@q.QuesDescription</b></p>
+
+            @if (q.Options.Count > 0)  // MCQ
+            {
+                foreach (var opt in q.Options)
+                {
+                    <label>
+                        <input type="radio" name="answers[@q.QuestionId].AnswerText" value="@opt.Text" />
+                        @opt.Text
+                    </label>
+                    <br />
+                }
+            }
+            else // Text / TrueFalse
+            {
+                <label>
+                    <input type="text" name="answers[@q.QuestionId].AnswerText" />
+                </label>
+            }
+        </div>
+        <hr />
+    }
+
+    <button type="submit">Submit Exam</button>
+</form>
