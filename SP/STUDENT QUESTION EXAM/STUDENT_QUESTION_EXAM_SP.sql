@@ -14,10 +14,36 @@ BEGIN
              RAISERROR ('Student not found.', 16, 1);
         IF NOT EXISTS (SELECT 1 FROM Question WHERE Question_Id = @Q_ID)
              RAISERROR ('Question not found.', 16, 1);
+        DECLARE @Score INT = 0;
+        IF @ANS IS NOT NULL
+        BEGIN
+            DECLARE @QuestionGrade INT;
+            SELECT @QuestionGrade = Grade 
+            FROM Question
+            WHERE Question_Id = @Q_ID;
 
+            IF EXISTS (SELECT 1 FROM TrueFalse_Question WHERE QuestionTF_Id = @Q_ID)
+            BEGIN
+                DECLARE @CorrectTF INT;
 
-        INSERT INTO Student_Question_Exam(Student_Id, Exam_Id, Question_Id,Student_Answer)
-        VALUES (@S_ID, @E_ID, @Q_ID, @ANS);
+                SELECT @CorrectTF = Correct_Answer
+                FROM TrueFalse_Question
+                WHERE QuestionTF_Id = @Q_ID;
+
+                IF (@ANS = @CorrectTF)
+                    SET @Score = @QuestionGrade;
+            END
+
+            ELSE IF EXISTS (SELECT 1 FROM MCQ_Question WHERE QuestionMCQ_Id = @Q_ID)
+            BEGIN
+                IF EXISTS (SELECT 1 FROM MCQ_Option WHERE Option_ID = @ANS AND Question_ID = @Q_ID AND Is_Correct = 1)
+                BEGIN
+                    SET @Score = @QuestionGrade;
+                END
+            END
+        END
+    INSERT INTO Student_Question_Exam(Student_Id,Exam_Id,Question_Id,Student_Answer,Student_Grade)
+            VALUES(@S_ID,@E_ID,@Q_ID,@ANS,@Score);
     END TRY
     BEGIN CATCH
         DECLARE @ErrorMessage NVARCHAR(4000);
@@ -52,11 +78,7 @@ BEGIN
                 RAISERROR ('Question not found.', 16, 1);
         END
 
-        SELECT 
-            Student_ID, 
-            Exam_ID, 
-            Question_ID, 
-            Student_Answer
+        SELECT Student_ID, Exam_ID, Question_ID, Student_Answer, Student_Grade
         FROM 
             STUDENT_QUESTION_EXAM
         WHERE 
