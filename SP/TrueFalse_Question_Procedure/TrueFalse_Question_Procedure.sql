@@ -1,4 +1,4 @@
-CREATE PROCEDURE Exam.InsertTrueFalseQuestion
+CREATE PROCEDURE InsertTrueFalseQuestion
     @Question_ID INT,
     @Correct_Answer BIT
 with encryption
@@ -9,7 +9,7 @@ BEGIN
 END
 
 
-Alter PROCEDURE Exam.UpdateTrueFalseAnswer
+Alter PROCEDURE UpdateTrueFalseAnswer
     @Question_ID INT,
     @Correct_Answer BIT
 WITH ENCRYPTION
@@ -29,7 +29,7 @@ END
 
 
 
-Alter PROCEDURE Exam.DeleteTrueFalseQuestion
+Alter PROCEDURE DeleteTrueFalseQuestion
     @Question_ID INT
 WITH ENCRYPTION
 AS
@@ -46,7 +46,7 @@ BEGIN
 END
 
 
-create PROCEDURE Exam.TFQuestionsWithCorrectAnswer
+create PROCEDURE TFQuestionsWithCorrectAnswer
 With Encryption 
 as
 Begin
@@ -56,7 +56,7 @@ on Q.Question_Id=TFQ.QuestionTF_Id
 End
 
 
-CREATE PROCEDURE Exam.TFQuestionWithCorrectAnswer
+CREATE PROCEDURE TFQuestionWithCorrectAnswer
     @Question_Id INT
 WITH ENCRYPTION
 AS

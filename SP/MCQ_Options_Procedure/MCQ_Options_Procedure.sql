@@ -1,4 +1,4 @@
-CREATE PROCEDURE Exam.InsertMCQOption
+CREATE PROCEDURE InsertMCQOption
     @Question_ID INT,
     @Option_Text NVARCHAR(255),
     @Is_Correct BIT
@@ -12,7 +12,7 @@ END
 
 
 
-Alter PROCEDURE Exam.UpdateMCQOption
+Alter PROCEDURE UpdateMCQOption
     @Option_ID INT,
     @Option_Text NVARCHAR(255),
     @Is_Correct BIT
@@ -35,7 +35,7 @@ END
 
 
 
-Alter PROCEDURE Exam.DeleteMCQOption
+Alter PROCEDURE DeleteMCQOption
     @Option_ID INT
 WITH ENCRYPTION
 AS
@@ -54,7 +54,7 @@ END
 
 
 
-create procedure Exam.MCQ_WithAllItsOptions
+create procedure MCQ_WithAllItsOptions
 with Encryption
 as Begin
 	select  q.Ques_Description,McqO.Option_text,McqO.Is_Correct from MCQ_Option McqO
@@ -62,10 +62,10 @@ as Begin
 	on Q.Question_Id=McqO.Question_Id
 End
 
-Exam.MCQ_WithAllItsOptions
+MCQ_WithAllItsOptions
 	
 
-Create procedure Exam.QuestionWithItsOptions
+Create procedure QuestionWithItsOptions
 		@Question_Id Int
 with encryption
 as
@@ -77,4 +77,4 @@ select  q.Ques_Description,McqO.Option_text,McqO.Is_Correct from MCQ_Option McqO
 
 End
 
-Exam.QuestionWithItsOptions 3
+QuestionWithItsOptions 3

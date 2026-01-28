@@ -1,4 +1,4 @@
-CREATE PROCEDURE Exam.InsertMCQQuestion
+CREATE PROCEDURE InsertMCQQuestion
     @Question_ID INT
 WITH ENCRYPTION
 AS
@@ -8,7 +8,7 @@ BEGIN
 END
 
 
-Alter PROCEDURE Exam.DeleteMCQQuestion
+Alter PROCEDURE DeleteMCQQuestion
     @Question_ID INT
 WITH ENCRYPTION
 AS
@@ -28,7 +28,7 @@ BEGIN
 END
 
 
-Create procedure Exam.MCQSWithTheCorrectAnswer
+Create procedure MCQSWithTheCorrectAnswer
 with Encryption
 as 
 Begin
@@ -40,10 +40,10 @@ Begin
 		where McqO.Is_Correct=1 
 End
 
-Exam.MCQSWithTheCorrectAnswer
+MCQSWithTheCorrectAnswer
 
 
-Create procedure Exam.MCQWithTheItsCorrectAnswer
+Create procedure MCQWithTheItsCorrectAnswer
 			@Question_ID INT
 with Encryption
 as 
@@ -56,7 +56,7 @@ Begin
 		where McqO.Is_Correct=1 and Q.Question_Id= @Question_ID
 End
 
-Exam.MCQWithTheItsCorrectAnswer 6
+MCQWithTheItsCorrectAnswer 6
 
 
 
