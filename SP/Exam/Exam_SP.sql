@@ -102,7 +102,7 @@ END
 declare @ExamId int 
 EXEC EXAM_INSERTION
     @Exam_Name ='OOPExam',
-    @Exam_Date ='2025-02-01', 
+    @Exam_Date ='2026-02-01', 
     @Exam_Duration =2,
     @New_Exam_ID = @ExamId OUTPUT;
 
@@ -290,4 +290,4 @@ END;
 GO
 
 -- TEST
-EXEC EXAM_CORRECTION @E_ID = 26,@S_NAME = 'Eman Hamam';
+--EXEC EXAM_CORRECTION @E_ID = 26,@S_NAME = 'Eman Hamam';
