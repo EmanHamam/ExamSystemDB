@@ -21,7 +21,7 @@ END CATCH
 END
 
 
-
+----------------------------------------------------------------------------------------------------------------------
 --Select
 CREATE PROC EXAM_SELECTION 
     @Exam_id INT = NULL
@@ -48,7 +48,7 @@ BEGIN CATCH
 END CATCH
 END
 
-
+----------------------------------------------------------------------------------------------------------------------
 --Update
 CREATE PROC EXAM_UPDATE 
     @Exam_id INT,
@@ -78,7 +78,7 @@ BEGIN
     END CATCH
 END
 
-
+----------------------------------------------------------------------------------------------------------------------
 -- DELETE 
 CREATE PROC EXAM_DELETION @EXAM_ID INT 
 WITH ENCRYPTION
@@ -96,7 +96,7 @@ BEGIN CATCH
         RAISERROR (@ErrorMessage,1,16);
 END CATCH
 END
-
+----------------------------------------------------------------------------------------------------------------------
 --Run them in the same Batch
 -- TEST INSERTION
 declare @ExamId int 
@@ -120,9 +120,9 @@ EXEC EXAM_SELECTION @EXAM_ID = @ExamId
 EXEC EXAM_DELETION @EXAM_ID = @ExamId
 
 --select * from Exam
-
+----------------------------------------------------------------------------------------------------------------------
 --Exam Generation
-CREATE PROC EXAM_GENERATION @CRS_NAME VARCHAR(50),@TF_NUM INT,@MCQ_NUM INT,@DTE DATE,@Duration INT
+ALTER PROC EXAM_GENERATION @CRS_NAME VARCHAR(50),@TF_NUM INT,@MCQ_NUM INT,@DTE DATE,@Duration INT
 WITH ENCRYPTION
 AS
 BEGIN
@@ -136,25 +136,26 @@ BEGIN TRY
       EXEC EXAM_INSERTION @CRS_NAME, @DTE, @Duration,@New_Exam_ID = @Exam_ID OUTPUT;
       --return examid
 	  SELECT @Exam_ID 
-        INSERT INTO Exam_Question (Exam_Id, Question_Id)
-        SELECT TOP (@TF_NUM)
-            @Exam_ID,
-            q.Question_Id
-        FROM Question q
-        JOIN TrueFalse_Question tf
-            ON q.Question_Id = tf.QuestionTF_Id
-        WHERE q.Course_Id = @Crs_ID
-        ORDER BY NEWID();
+      DECLARE @SelectedQuestions TABLE (Question_Id INT); --temp
+
+        -- TF Questions
+        INSERT INTO @SelectedQuestions(Question_Id)
+        EXEC GET_RANDOM_TF_QUESTIONS
+            @COURSE_ID = @Crs_ID,
+            @TF_NUM = @TF_NUM;
+
+        -- MCQ Questions
+        INSERT INTO @SelectedQuestions (Question_Id)
+        EXEC GET_RANDOM_MCQ_QUESTIONS
+            @COURSE_ID = @Crs_ID,
+            @MCQ_NUM = @MCQ_NUM;
 
         INSERT INTO Exam_Question (Exam_Id, Question_Id)
-        SELECT TOP (@MCQ_NUM)
+        SELECT
             @Exam_ID,
-            q.Question_Id
-        FROM Question q
-        JOIN MCQ_Question mq
-            ON q.Question_Id = mq.QuestionMCQ_Id
-        WHERE q.Course_Id = @Crs_ID
-        ORDER BY NEWID();
+            Question_Id
+        FROM @SelectedQuestions;
+
    END
 END TRY
     BEGIN CATCH
@@ -163,4 +164,130 @@ END TRY
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
+-------------------------------------------------------------------------------------------------------------
+CREATE PROC GET_RANDOM_TF_QUESTIONS
+    @COURSE_ID INT,
+    @TF_NUM INT
+WITH ENCRYPTION
+AS
+BEGIN
+    BEGIN TRY
+        SELECT TOP (@TF_NUM)
+            Question_Id
+        FROM Question q
+        JOIN TrueFalse_Question tf
+            ON q.Question_Id = tf.QuestionTF_Id
+        WHERE q.Course_Id = @COURSE_ID
+        ORDER BY NEWID();
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        SELECT @ErrorMessage = ERROR_MESSAGE();
+        RAISERROR (@ErrorMessage, 16, 1);
+    END CATCH
+END;
+GO
+-------------------------------------------------
+CREATE PROC GET_RANDOM_MCQ_QUESTIONS
+    @COURSE_ID INT,
+    @MCQ_NUM INT
+WITH ENCRYPTION
+AS
+BEGIN
+    BEGIN TRY
+        SELECT TOP (@MCQ_NUM)
+            Question_Id
+        FROM Question q
+        JOIN MCQ_Question mq
+            ON q.Question_Id = mq.QuestionMCQ_Id
+        WHERE q.Course_Id = @COURSE_ID
+        ORDER BY NEWID();
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        SELECT @ErrorMessage = ERROR_MESSAGE();
+        RAISERROR (@ErrorMessage, 16, 1);
+    END CATCH
+END;
+GO
 
+--EXAM CORRECTION
+GO
+CREATE PROC EXAM_CORRECTION
+    @E_ID INT,
+    @S_NAME VARCHAR(150)
+WITH ENCRYPTION
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+       
+        IF NOT EXISTS (SELECT 1 FROM Exam WHERE Exam_Id = @E_ID)
+            RAISERROR ('Exam not found.', 16, 1);
+
+        
+        DECLARE @S_ID INT;
+
+        SELECT @S_ID = Id
+        FROM Student
+        WHERE CONCAT(FName, ' ', LName) = @S_NAME;
+
+        IF @S_ID IS NULL
+            RAISERROR ('Student not found.', 16, 1);
+
+       
+        IF OBJECT_ID('tempdb..#StudentAnswers') IS NOT NULL
+            DROP TABLE #StudentAnswers;
+
+       
+        CREATE TABLE #StudentAnswers
+        (Student_ID INT,Exam_ID INT,Question_ID INT,Student_Answer VARCHAR(200),Student_Grade INT);
+
+       
+        INSERT INTO #StudentAnswers
+        EXEC STUDENT_QUESTION_EXAM_SELECTION @S_ID = @S_ID,@E_ID = @E_ID,@Q_ID = NULL;
+
+       
+        DECLARE @TotalStudentGrade INT;
+
+        SELECT @TotalStudentGrade = ISNULL(SUM(Student_Grade), 0)
+        FROM #StudentAnswers;
+
+       
+        EXEC STUDENT_EXAM_UPDATE
+            @Student_ID = @S_ID,
+            @Exam_ID = @E_ID,
+            @Total_Grade = @TotalStudentGrade;
+
+       
+        DECLARE @TotalExamGrade INT;
+
+        SELECT @TotalExamGrade = ISNULL(SUM(Q.Grade), 0)
+        FROM Question Q
+        JOIN #StudentAnswers SA
+            ON Q.Question_Id = SA.Question_ID;
+
+       
+        DECLARE @Percentage DECIMAL(5,2);
+
+        SET @Percentage =
+            CASE 
+                WHEN @TotalExamGrade = 0 THEN 0
+                ELSE (@TotalStudentGrade * 100.0 / @TotalExamGrade)
+            END;
+
+       
+        SELECT @Percentage AS Percentage;
+
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        SELECT @ErrorMessage = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END;
+GO
+
+-- TEST
+EXEC EXAM_CORRECTION @E_ID = 26,@S_NAME = 'Eman Hamam';
