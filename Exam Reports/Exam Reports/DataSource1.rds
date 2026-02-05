@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RptDataSource xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="DataSource1">
+  <ConnectionProperties>
+    <Extension>SQL</Extension>
+    <ConnectString>Data Source=db38834.public.databaseasp.net;Initial Catalog=db38834</ConnectString>
+  </ConnectionProperties>
+  <DataSourceID>c5fd996b-04ab-49ec-b347-f4adb065637e</DataSourceID>
+</RptDataSource>
