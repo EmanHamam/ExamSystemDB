@@ -1,37 +1,56 @@
-﻿@using ExamSystem.Models
-@model List<ExamQuestionViewModel>
-
-<h2>Take Exam</h2>
+﻿@model List<ExamQuestionViewModel>
 
 <form asp-action="SubmitExam" method="post">
+
     <input type="hidden" name="studentId" value="1" />
     <input type="hidden" name="examId" value="@Model.First().ExamId" />
 
-    @foreach (var q in Model)
+    @for (int i = 0; i < Model.Count; i++)
     {
-        <div>
-            <p><b>@q.QuesDescription</b></p>
+        var q = Model[i];
 
-            @if (q.Options.Count > 0)  // MCQ
-            {
-                foreach (var opt in q.Options)
-                {
-                    <label>
-                        <input type="radio" name="answers[@q.QuestionId].AnswerText" value="@opt.Text" />
-                        @opt.Text
-                    </label>
-                    <br />
-                }
-            }
-            else // Text / TrueFalse
+        <input type="hidden"
+               name="answers[@i].QuestionId"
+               value="@q.QuestionId" />
+
+        <p><b>@q.QuesDescription</b></p>
+
+        @* ===== MCQ ===== *@
+        if (q.Options.Count > 0)
+        {
+            foreach (var opt in q.Options)
             {
                 <label>
-                    <input type="text" name="answers[@q.QuestionId].AnswerText" />
+                    <input type="radio"
+                           name="answers[@i].AnswerText"
+                           value="@opt.OptionId" />
+                    @opt.Text
                 </label>
+                <br />
             }
-        </div>
+        }
+        else
+        {
+            @* ===== True / False ===== *@
+
+            <label>
+                <input type="radio"
+                       name="answers[@i].AnswerText"
+                       value="1" /> True
+            </label>
+
+            <br />
+
+            <label>
+                <input type="radio"
+                       name="answers[@i].AnswerText"
+                       value="0" /> False
+            </label>
+        }
+
         <hr />
     }
 
     <button type="submit">Submit Exam</button>
+
 </form>
