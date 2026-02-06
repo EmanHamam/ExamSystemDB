@@ -106,7 +106,7 @@ public class ExamController : Controller
                 examId = Convert.ToInt32(result);
             }
 
-            // Redirect to TakeExam
+            
             return RedirectToAction("TakeExam", new { examId, studentId });
         }
 
@@ -165,46 +165,34 @@ public class ExamController : Controller
         using var conn = new SqlConnection(_connectionString);
         conn.Open();
 
-
         foreach (var ans in answers)
         {
             using var cmd = new SqlCommand("studentanswer", conn);
             cmd.CommandType = CommandType.StoredProcedure;
-
             cmd.Parameters.AddWithValue("@StudentId", studentId);
             cmd.Parameters.AddWithValue("@ExamId", examId);
             cmd.Parameters.AddWithValue("@QuestionId", ans.QuestionId);
-
             cmd.Parameters.AddWithValue("@Answer",
-                string.IsNullOrEmpty(ans.AnswerText)
-                ? (object)DBNull.Value
-                : ans.AnswerText);
-
+                string.IsNullOrEmpty(ans.AnswerText) ? (object)DBNull.Value : ans.AnswerText);
             cmd.ExecuteNonQuery();
         }
 
-
         string fullName;
-
-        using (var nameCmd = new SqlCommand(
-            "SELECT CONCAT(FName,' ',LName) FROM Student WHERE Id=@id", conn))
-        {
-            nameCmd.Parameters.AddWithValue("@id", studentId);
-            fullName = nameCmd.ExecuteScalar()?.ToString();
-        }
+        using var nameCmd = new SqlCommand(
+            "SELECT CONCAT(FName,' ',LName) FROM Student WHERE Id=@id", conn);
+        nameCmd.Parameters.AddWithValue("@id", studentId);
+        fullName = nameCmd.ExecuteScalar()?.ToString();
 
         using var correctionCmd = new SqlCommand("EXAM_CORRECTION", conn);
         correctionCmd.CommandType = CommandType.StoredProcedure;
         correctionCmd.Parameters.AddWithValue("@E_ID", examId);
         correctionCmd.Parameters.AddWithValue("@S_NAME", fullName);
-
         var result = correctionCmd.ExecuteScalar();
 
         int grade = Convert.ToInt32(result);
 
         return RedirectToAction("Result", new { grade });
     }
-
 
     public IActionResult Result(int grade)
     {
