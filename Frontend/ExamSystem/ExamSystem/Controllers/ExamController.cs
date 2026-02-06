@@ -14,7 +14,7 @@ public class ExamController : Controller
 
 
 
-    // GET: StartExam
+    
     public IActionResult StartExam()
     { return View(new StartExamViewModel()); }
 
