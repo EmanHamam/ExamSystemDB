@@ -1,0 +1,77 @@
+﻿@model ExamSystem.Models.StartExamViewModel
+
+<style>
+    form {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 25px;
+        border: 2px solid #007bff;
+        border-radius: 12px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    form label {
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+        color: #333;
+    }
+
+    form input[type="text"], form select {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0 15px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    }
+
+    form button {
+        width: 100%;
+        padding: 12px;
+        background-color: #007bff;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+    }
+    form button:hover {
+        background-color: #0056b3;
+    }
+
+    .text-danger {
+        color: #d9534f;
+        font-weight: bold;
+    }
+</style>
+
+<form asp-action="StartExam" method="post">
+    <label>Student Name</label>
+    <input asp-for="StudentName" class="form-control" />
+
+    @if (Model.Courses.Any())
+    {
+        <label>Course</label>
+        <select asp-for="CourseId" class="form-control">
+            <option value="">-- Select Course --</option>
+            @foreach (var c in Model.Courses)
+            {
+                <option value="@c.Id">@c.Course_Name</option>
+            }
+        </select>
+        <input type="hidden" name="actionType" value="SelectCourse" />
+        <button type="submit" class="btn btn-primary mt-3">Start Exam</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary mt-3">Next</button>
+    }
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="text-danger mt-2">
+            @Html.ValidationSummary()
+        </div>
+    }
+</form>

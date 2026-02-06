@@ -12,7 +12,108 @@ public class ExamController : Controller
         _connectionString = configuration.GetConnectionString("ExamDB");
     }
 
-    
+
+
+    // GET: StartExam
+    public IActionResult StartExam()
+    { return View(new StartExamViewModel()); }
+
+    [HttpPost]
+    public IActionResult StartExam(StartExamViewModel model, string actionType)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        conn.Open();
+
+        
+        if (string.IsNullOrWhiteSpace(model.StudentName))
+        {
+            ModelState.AddModelError("", "Please enter your name");
+            return View(model);
+        }
+
+        int studentId, trackId;
+
+        using (var cmd = new SqlCommand(
+            "SELECT Id, Track_Id FROM Student WHERE CONCAT(FName,' ',LName)=@name", conn))
+        {
+            cmd.Parameters.AddWithValue("@name", model.StudentName);
+            using var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                ModelState.AddModelError("", "You are not exist");
+                return View(model);
+            }
+            studentId = (int)reader["Id"];
+            trackId = (int)reader["Track_Id"];
+        }
+
+        
+        model.Courses.Clear();
+        using (var cmd = new SqlCommand(
+            @"SELECT c.Id, c.Course_Name
+          FROM Course c
+          INNER JOIN Course_Track ct ON c.Id = ct.Course_Id
+          WHERE ct.Track_Id = @trackId", conn))
+        {
+            cmd.Parameters.AddWithValue("@trackId", trackId);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                model.Courses.Add(new Course
+                {
+                    Id = (int)reader["Id"],
+                    Course_Name = reader["Course_Name"].ToString()
+                });
+            }
+        }
+
+       
+        if (actionType == "SelectCourse")
+        {
+            if (model.CourseId == 0)
+            {
+                ModelState.AddModelError("", "Please select a course");
+                return View(model);
+            }
+
+      
+            bool allowed;
+            using (var cmd = new SqlCommand(
+                @"SELECT COUNT(*) FROM Course_Track WHERE Track_Id=@tid AND Course_Id=@cid", conn))
+            {
+                cmd.Parameters.AddWithValue("@tid", trackId);
+                cmd.Parameters.AddWithValue("@cid", model.CourseId);
+                allowed = (int)cmd.ExecuteScalar() > 0;
+            }
+
+            if (!allowed)
+            {
+                ModelState.AddModelError("", "You are not enrolled in this course");
+                return View(model);
+            }
+
+            int examId;
+            using (var cmd = new SqlCommand(
+                "SELECT TOP 1 Exam_Id FROM Exam WHERE COURSE_ID=@cid ORDER BY EXDate DESC", conn))
+            {
+                cmd.Parameters.AddWithValue("@cid", model.CourseId);
+                var result = cmd.ExecuteScalar();
+                if (result == null)
+                {
+                    ModelState.AddModelError("", "No exam for this course");
+                    return View(model);
+                }
+                examId = Convert.ToInt32(result);
+            }
+
+            // Redirect to TakeExam
+            return RedirectToAction("TakeExam", new { examId, studentId });
+        }
+
+       
+        return View(model);
+    }
+
     public IActionResult TakeExam(int examId, int studentId)
     {
         var questions = new List<ExamQuestionViewModel>();
@@ -57,14 +158,14 @@ public class ExamController : Controller
         return View(questions);
     }
 
-    
+
     [HttpPost]
     public IActionResult SubmitExam(int studentId, int examId, List<AnswerViewModel> answers)
     {
         using var conn = new SqlConnection(_connectionString);
         conn.Open();
 
-        
+
         foreach (var ans in answers)
         {
             using var cmd = new SqlCommand("studentanswer", conn);
@@ -82,7 +183,7 @@ public class ExamController : Controller
             cmd.ExecuteNonQuery();
         }
 
-        
+
         string fullName;
 
         using (var nameCmd = new SqlCommand(
@@ -104,7 +205,7 @@ public class ExamController : Controller
         return RedirectToAction("Result", new { grade });
     }
 
-    
+
     public IActionResult Result(int grade)
     {
         ViewBag.Grade = grade;
