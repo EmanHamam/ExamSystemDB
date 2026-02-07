@@ -53,7 +53,7 @@ BEGIN
 END
 
 -- SELECTION
-CREATE PROC STUDENT_QUESTION_EXAM_SELECTION
+ALTER PROC STUDENT_QUESTION_EXAM_SELECTION
     @S_ID INT = NULL,
     @E_ID INT = NULL,
     @Q_ID INT = NULL
@@ -62,7 +62,7 @@ BEGIN
     BEGIN TRY
         IF @S_ID IS NOT NULL
         BEGIN
-            IF NOT EXISTS (SELECT 1 FROM Question WHERE Question_Id = @Q_ID)
+            IF NOT EXISTS (SELECT 1 FROM Student WHERE Id = @S_ID)
              RAISERROR ('Student not found.', 16, 1);
         END
 

@@ -265,6 +265,20 @@ VALUES
 (65, 'Cloud computing eliminates the need for physical servers.', 1, 10),
 (66, 'Solidity is used to write smart contracts on Ethereum.', 1, 12);
 
+INSERT INTO Question (Question_Id, Ques_Description, Grade, Course_Id)
+VALUES
+(67, 'HTML is used to structure the content of a webpage.', 1, 1),
+(68, 'CSS can be used to change the layout of multiple web pages at once.', 1, 1),
+(69, 'The <title> tag is placed inside the <body> section.', 1, 1),
+(70, 'Inline CSS has higher priority than external CSS.', 1, 1),
+(71, 'The <img> tag requires a closing tag.', 1, 1),
+(72, 'CSS Flexbox is mainly used for one-dimensional layouts.', 1, 1),
+(73, 'The id attribute in HTML must be unique within a page.', 1, 1),
+(74, 'You can apply multiple classes to the same HTML element.', 1, 1),
+(75, 'The z-index property only works on positioned elements.', 1, 1),
+(76, 'Media queries are used in CSS to create responsive designs.', 1, 1);
+
+
 -- TrueFalse_Question
 INSERT INTO TrueFalse_Question (QuestionTF_Id, Correct_Answer)
 VALUES
@@ -277,6 +291,20 @@ VALUES
 (64, 0), 
 (65, 0), 
 (66, 1); 
+
+INSERT INTO TrueFalse_Question (QuestionTF_Id, Correct_Answer)
+VALUES
+(67, 1), 
+(68, 1), 
+(69, 0), 
+(70, 1), 
+(71, 0), 
+(72, 1), 
+(73, 1), 
+(74, 1), 
+(75, 1), 
+(76, 1); 
+
 
 --MCQ_Question
 INSERT INTO MCQ_Question (QuestionMCQ_Id)

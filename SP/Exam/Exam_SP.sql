@@ -122,7 +122,7 @@ EXEC EXAM_DELETION @EXAM_ID = @ExamId
 --select * from Exam
 ----------------------------------------------------------------------------------------------------------------------
 --Exam Generation
-ALTER PROC EXAM_GENERATION @CRS_NAME VARCHAR(50),@TF_NUM INT,@MCQ_NUM INT,@DTE DATE,@Duration INT
+CREATE PROC EXAM_GENERATION @CRS_NAME VARCHAR(50),@TF_NUM INT,@MCQ_NUM INT,@DTE DATE,@Duration INT
 WITH ENCRYPTION
 AS
 BEGIN
@@ -149,12 +149,17 @@ BEGIN TRY
         EXEC GET_RANDOM_MCQ_QUESTIONS
             @COURSE_ID = @Crs_ID,
             @MCQ_NUM = @MCQ_NUM;
-
-        INSERT INTO Exam_Question (Exam_Id, Question_Id)
-        SELECT
-            @Exam_ID,
-            Question_Id
-        FROM @SelectedQuestions;
+        --SELECT * FROM @SelectedQuestions;
+        IF EXISTS (SELECT 1 FROM @SelectedQuestions)
+        BEGIN
+            INSERT INTO Exam_Question (Exam_Id, Question_Id)
+            SELECT @Exam_ID, Question_Id
+            FROM @SelectedQuestions;
+        END
+        ELSE
+        BEGIN
+            RAISERROR('No questions were selected for this exam.',16,1);
+        END
 
    END
 END TRY
@@ -210,10 +215,12 @@ BEGIN
     END CATCH
 END;
 GO
-
+-------------------------------------------------------------------------------------------------------------
+--StudentAnswers is the SP(STUDENT_QUESTION_EXAM_INSERTION)
+-------------------------------------------------------------------------------------------------------------
 --EXAM CORRECTION
 GO
-CREATE PROC EXAM_CORRECTION
+ALter PROC EXAM_CORRECTION
     @E_ID INT,
     @S_NAME VARCHAR(150)
 WITH ENCRYPTION
@@ -289,5 +296,11 @@ BEGIN
 END;
 GO
 
+
+
+
 -- TEST
---EXEC EXAM_CORRECTION @E_ID = 26,@S_NAME = 'Eman Hamam';
+EXEC EXAM_GENERATION @CRS_NAME ='Frontend Development',@TF_NUM= 5,@MCQ_NUM= 7,@DTE= '2/5/2026',@Duration= 2
+-- [dbo].[STUDENT_EXAM_INSERTION] @Student_ID=2,@Exam_ID=19,@TotalGrade=0
+EXEC EXAM_CORRECTION @E_ID = 19,@S_NAME = 'Yara Mostafa';
+
